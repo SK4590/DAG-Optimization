@@ -21,21 +21,23 @@
 #include <vector>
 #include <string>
 
+using namespace std;
+
 void displayMenu() {
-    std::cout << "\n=======================================================================\n";
-    std::cout << "     DAG-BASED BASIC BLOCK OPTIMIZER (REVIEW 2 - 75% MILESTONE)        \n";
-    std::cout << "=======================================================================\n";
-    std::cout << " 1. Run Complete Benchmark Suite (All 5 Built-in Test Cases)\n";
-    std::cout << " 2. Run Test Case 1: Standard CSE (from Project README)\n";
-    std::cout << " 3. Run Test Case 2: Commutative CSE (a+b == b+a, x*y == y*x)\n";
-    std::cout << " 4. Run Test Case 3: Variable Reassignment with Node Kill Semantics\n";
-    std::cout << " 5. Run Test Case 4: Constant Folding & Algebraic Identities\n";
-    std::cout << " 6. Run Test Case 5: Realistic Matrix Array Offset Calculation\n";
-    std::cout << " 7. Optimize Custom TAC File\n";
-    std::cout << " 8. Interactive TAC Terminal Input\n";
-    std::cout << " 9. Exit\n";
-    std::cout << "-----------------------------------------------------------------------\n";
-    std::cout << "Enter your choice [1-9]: ";
+    cout << "\n=======================================================================\n";
+    cout << "     DAG-BASED BASIC BLOCK OPTIMIZER (REVIEW 2 - 75% MILESTONE)        \n";
+    cout << "=======================================================================\n";
+    cout << " 1. Run Complete Benchmark Suite (All 5 Built-in Test Cases)\n";
+    cout << " 2. Run Test Case 1: Standard CSE (from Project README)\n";
+    cout << " 3. Run Test Case 2: Commutative CSE (a+b == b+a, x*y == y*x)\n";
+    cout << " 4. Run Test Case 3: Variable Reassignment with Node Kill Semantics\n";
+    cout << " 5. Run Test Case 4: Constant Folding & Algebraic Identities\n";
+    cout << " 6. Run Test Case 5: Realistic Matrix Array Offset Calculation\n";
+    cout << " 7. Optimize Custom TAC File\n";
+    cout << " 8. Interactive TAC Terminal Input\n";
+    cout << " 9. Exit\n";
+    cout << "-----------------------------------------------------------------------\n";
+    cout << "Enter your choice [1-9]: ";
 }
 
 int main(int argc, char* argv[]) {
@@ -43,13 +45,13 @@ int main(int argc, char* argv[]) {
 
     // CLI Argument mode: ./dag_optimizer <input_file> [output_file]
     if (argc >= 2) {
-        std::string inputFile = argv[1];
-        std::string outputFile = (argc >= 3) ? argv[2] : "optimized_output.tac";
+        string inputFile = argv[1];
+        string outputFile = (argc >= 3) ? argv[2] : "optimized_output.tac";
 
-        std::cout << "[INFO] Processing TAC file from command line: " << inputFile << "\n";
-        std::vector<Instruction> instructions = TACParser::parseFile(inputFile);
+        cout << "[INFO] Processing TAC file from command line: " << inputFile << "\n";
+        vector<Instruction> instructions = TACParser::parseFile(inputFile);
         if (instructions.empty()) {
-            std::cerr << "[ERROR] Could not parse TAC instructions from " << inputFile << "\n";
+            cerr << "[ERROR] Could not parse TAC instructions from " << inputFile << "\n";
             return 1;
         }
 
@@ -57,18 +59,18 @@ int main(int argc, char* argv[]) {
         Visualizer::printOptimizationLogs(optimizer);
         Visualizer::printDAG(optimizer);
 
-        std::vector<std::string> optimized = optimizer.generateOptimizedTAC();
+        vector<string> optimized = optimizer.generateOptimizedTAC();
         Visualizer::printSideBySideComparison(optimizer);
         Visualizer::printPerformanceReport(optimizer);
 
         // Write output TAC file
-        std::ofstream outFile(outputFile);
+        ofstream outFile(outputFile);
         if (outFile.is_open()) {
             for (const auto& line : optimized) {
                 outFile << line << "\n";
             }
             outFile.close();
-            std::cout << "[SUCCESS] Wrote optimized TAC to: " << outputFile << "\n";
+            cout << "[SUCCESS] Wrote optimized TAC to: " << outputFile << "\n";
         }
 
         Visualizer::exportGraphviz(optimizer, "dag_output.dot");
@@ -79,11 +81,11 @@ int main(int argc, char* argv[]) {
     int choice = 0;
     while (true) {
         displayMenu();
-        if (!(std::cin >> choice)) {
-            std::cin.clear();
-            std::string discard;
-            std::getline(std::cin, discard);
-            std::cout << "[ERROR] Invalid input. Please enter a number.\n";
+        if (!(cin >> choice)) {
+            cin.clear();
+            string discard;
+            getline(cin, discard);
+            cout << "[ERROR] Invalid input. Please enter a number.\n";
             continue;
         }
 
@@ -100,22 +102,22 @@ int main(int argc, char* argv[]) {
         } else if (choice == 6) {
             BenchmarkRunner::runBenchmark("TestCase5_MatrixOffset", "samples/sample5_matrix_offset.tac", optimizer);
         } else if (choice == 7) {
-            std::cout << "Enter path to TAC file: ";
-            std::string path;
-            std::cin >> path;
+            cout << "Enter path to TAC file: ";
+            string path;
+            cin >> path;
             BenchmarkRunner::runBenchmark("CustomFile", path, optimizer);
         } else if (choice == 8) {
-            std::cout << "\nEnter TAC instructions line by line (Type 'END' on a new line when done):\n";
-            std::string line;
-            std::cin.ignore();
-            std::vector<Instruction> userInstructions;
-            while (std::getline(std::cin, line)) {
+            cout << "\nEnter TAC instructions line by line (Type 'END' on a new line when done):\n";
+            string line;
+            cin.ignore();
+            vector<Instruction> userInstructions;
+            while (getline(cin, line)) {
                 if (Utils::trim(line) == "END") break;
                 Instruction inst;
                 if (TACParser::parseLine(line, inst)) {
                     userInstructions.push_back(inst);
                 } else if (!Utils::trim(line).empty()) {
-                    std::cout << "  [Warning: skipped invalid TAC line: " << line << "]\n";
+                    cout << "  [Warning: skipped invalid TAC line: " << line << "]\n";
                 }
             }
 
@@ -128,13 +130,13 @@ int main(int argc, char* argv[]) {
                 Visualizer::printPerformanceReport(optimizer);
                 Visualizer::exportGraphviz(optimizer, "dag_interactive.dot");
             } else {
-                std::cout << "[INFO] No instructions provided.\n";
+                cout << "[INFO] No instructions provided.\n";
             }
         } else if (choice == 9) {
-            std::cout << "Exiting DAG Optimizer. Thank you!\n";
+            cout << "Exiting DAG Optimizer. Thank you!\n";
             break;
         } else {
-            std::cout << "[ERROR] Invalid option. Please select 1-9.\n";
+            cout << "[ERROR] Invalid option. Please select 1-9.\n";
         }
     }
 

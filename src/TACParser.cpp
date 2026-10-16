@@ -10,8 +10,10 @@
 #include <sstream>
 #include <iostream>
 
-bool TACParser::parseLine(const std::string& raw, Instruction& outInst) {
-    std::string line = Utils::trim(raw);
+using namespace std;
+
+bool TACParser::parseLine(const string& raw, Instruction& outInst) {
+    string line = Utils::trim(raw);
     if (line.empty() || line[0] == '#' || (line.size() >= 2 && line[0] == '/' && line[1] == '/')) {
         return false; // Skip comments and empty lines
     }
@@ -20,19 +22,19 @@ bool TACParser::parseLine(const std::string& raw, Instruction& outInst) {
 
     // Check for assignment operator '='
     size_t eqPos = line.find('=');
-    if (eqPos == std::string::npos) {
+    if (eqPos == string::npos) {
         outInst.type = InstructionType::UNKNOWN;
         return false;
     }
 
-    std::string leftSide = Utils::trim(line.substr(0, eqPos));
-    std::string rightSide = Utils::trim(line.substr(eqPos + 1));
+    string leftSide = Utils::trim(line.substr(0, eqPos));
+    string rightSide = Utils::trim(line.substr(eqPos + 1));
     outInst.result = leftSide;
 
     // Tokenize right side
-    std::stringstream ss(rightSide);
-    std::vector<std::string> tokens;
-    std::string token;
+    stringstream ss(rightSide);
+    vector<string> tokens;
+    string token;
     while (ss >> token) {
         tokens.push_back(token);
     }
@@ -68,15 +70,15 @@ bool TACParser::parseLine(const std::string& raw, Instruction& outInst) {
     return true;
 }
 
-std::vector<Instruction> TACParser::parseFile(const std::string& filename) {
-    std::vector<Instruction> instructions;
-    std::ifstream file(filename);
+vector<Instruction> TACParser::parseFile(const string& filename) {
+    vector<Instruction> instructions;
+    ifstream file(filename);
     if (!file.is_open()) {
-        std::cerr << "[ERROR] Unable to open TAC input file: " << filename << "\n";
+        cerr << "[ERROR] Unable to open TAC input file: " << filename << "\n";
         return instructions;
     }
-    std::string line;
-    while (std::getline(file, line)) {
+    string line;
+    while (getline(file, line)) {
         Instruction inst;
         if (parseLine(line, inst)) {
             instructions.push_back(inst);
@@ -85,11 +87,11 @@ std::vector<Instruction> TACParser::parseFile(const std::string& filename) {
     return instructions;
 }
 
-std::vector<Instruction> TACParser::parseString(const std::string& content) {
-    std::vector<Instruction> instructions;
-    std::stringstream ss(content);
-    std::string line;
-    while (std::getline(ss, line)) {
+vector<Instruction> TACParser::parseString(const string& content) {
+    vector<Instruction> instructions;
+    stringstream ss(content);
+    string line;
+    while (getline(ss, line)) {
         Instruction inst;
         if (parseLine(line, inst)) {
             instructions.push_back(inst);

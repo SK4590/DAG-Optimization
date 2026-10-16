@@ -5,11 +5,13 @@
 #include <vector>
 #include "Instruction.h"
 
+using namespace std;
+
 class TACParser {
 public:
-    static bool parseLine(const std::string& raw, Instruction& outInst);
-    static std::vector<Instruction> parseFile(const std::string& filename);
-    static std::vector<Instruction> parseString(const std::string& content);
+    static bool parseLine(const string& raw, Instruction& outInst);
+    static vector<Instruction> parseFile(const string& filename);
+    static vector<Instruction> parseString(const string& content);
 };
 
 #endif // TACPARSER_H
