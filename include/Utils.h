@@ -3,11 +3,13 @@
 
 #include <string>
 
+using namespace std;
+
 namespace Utils {
-    std::string trim(const std::string& s);
-    bool isNumber(const std::string& s, double& outVal);
-    std::string formatNumber(double val);
-    bool isCommutative(const std::string& op);
+    string trim(const string& s);
+    bool isNumber(const string& s, double& outVal);
+    string formatNumber(double val);
+    bool isCommutative(const string& op);
 }
 
 #endif // UTILS_H

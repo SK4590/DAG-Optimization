@@ -3,6 +3,8 @@
 
 #include <string>
 
+using namespace std;
+
 enum class InstructionType {
     BINARY,      // res = arg1 op arg2
     UNARY,       // res = op arg1
@@ -13,13 +15,13 @@ enum class InstructionType {
 
 struct Instruction {
     InstructionType type;
-    std::string result;
-    std::string arg1;
-    std::string op;
-    std::string arg2;
-    std::string rawLine;
+    string result;
+    string arg1;
+    string op;
+    string arg2;
+    string rawLine;
 
-    std::string toString() const {
+    string toString() const {
         if (type == InstructionType::BINARY) {
             return result + " = " + arg1 + " " + op + " " + arg2;
         } else if (type == InstructionType::UNARY) {

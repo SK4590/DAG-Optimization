@@ -4,9 +4,11 @@
 #include <string>
 #include "DAGOptimizer.h"
 
+using namespace std;
+
 class BenchmarkRunner {
 public:
-    static void runBenchmark(const std::string& testName, const std::string& filepath, DAGOptimizer& optimizer);
+    static void runBenchmark(const string& testName, const string& filepath, DAGOptimizer& optimizer);
     static void runAllBenchmarks(DAGOptimizer& optimizer);
 };
 

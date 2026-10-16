@@ -5,19 +5,21 @@
 #include <vector>
 #include "Instruction.h"
 
+using namespace std;
+
 // ============================================================================
 // DAG Node Structure
 // ============================================================================
 struct DAGNode {
     int id;
-    std::string op;                  // Operator for internal node, or var/const name for leaf
+    string op;                  // Operator for internal node, or var/const name for leaf
     int leftChild;                   // -1 for leaf or unary
     int rightChild;                  // -1 for leaf or unary
-    std::vector<std::string> labels; // Active variables currently referencing this node's value
+    vector<string> labels; // Active variables currently referencing this node's value
     bool isConstant;                 // True if compile-time constant
     double constValue;               // Numerical value if constant
-    std::string primaryVar;          // Representative variable first assigned to this node
-    std::string creationComment;     // Audit message for optimizations applied
+    string primaryVar;          // Representative variable first assigned to this node
+    string creationComment;     // Audit message for optimizations applied
 };
 
 // ============================================================================
@@ -25,8 +27,8 @@ struct DAGNode {
 // ============================================================================
 struct ProcessedStep {
     Instruction original;
-    std::string optimizedTAC;
-    std::string optimizationType;
+    string optimizedTAC;
+    string optimizationType;
     int targetNodeId;
 };
 

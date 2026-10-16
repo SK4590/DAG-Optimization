@@ -10,21 +10,23 @@
 
 #include <iostream>
 
-void BenchmarkRunner::runBenchmark(const std::string& testName, const std::string& filepath, DAGOptimizer& optimizer) {
-    std::cout << "\n#######################################################################\n";
-    std::cout << " RUNNING BENCHMARK: " << testName << "\n";
-    std::cout << " File: " << filepath << "\n";
-    std::cout << "#######################################################################\n";
+using namespace std;
 
-    std::vector<Instruction> instructions = TACParser::parseFile(filepath);
+void BenchmarkRunner::runBenchmark(const string& testName, const string& filepath, DAGOptimizer& optimizer) {
+    cout << "\n#######################################################################\n";
+    cout << " RUNNING BENCHMARK: " << testName << "\n";
+    cout << " File: " << filepath << "\n";
+    cout << "#######################################################################\n";
+
+    vector<Instruction> instructions = TACParser::parseFile(filepath);
     if (instructions.empty()) {
-        std::cerr << "[WARNING] No valid TAC instructions found in " << filepath << "\n";
+        cerr << "[WARNING] No valid TAC instructions found in " << filepath << "\n";
         return;
     }
 
-    std::cout << "Original Instructions Read (" << instructions.size() << "):\n";
+    cout << "Original Instructions Read (" << instructions.size() << "):\n";
     for (size_t i = 0; i < instructions.size(); ++i) {
-        std::cout << "  " << (i + 1) << ". " << instructions[i].toString() << "\n";
+        cout << "  " << (i + 1) << ". " << instructions[i].toString() << "\n";
     }
 
     optimizer.processBlock(instructions);
@@ -35,7 +37,7 @@ void BenchmarkRunner::runBenchmark(const std::string& testName, const std::strin
     Visualizer::printSideBySideComparison(optimizer);
     Visualizer::printPerformanceReport(optimizer);
 
-    std::string dotName = "dag_" + testName + ".dot";
+    string dotName = "dag_" + testName + ".dot";
     Visualizer::exportGraphviz(optimizer, dotName);
 }
 

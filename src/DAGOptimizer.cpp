@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <unordered_set>
 
+using namespace std;
+
 DAGOptimizer::DAGOptimizer() {
     clear();
 }
@@ -23,31 +25,31 @@ void DAGOptimizer::clear() {
     stats = OptimizationStats();
 }
 
-std::string DAGOptimizer::makeSignature(const std::string& op, int leftId, int rightId) {
+string DAGOptimizer::makeSignature(const string& op, int leftId, int rightId) {
     if (Utils::isCommutative(op) && leftId > rightId) {
-        std::swap(leftId, rightId);
+        swap(leftId, rightId);
         stats.commutativeMatches++;
     }
-    return op + "(" + std::to_string(leftId) + "," + std::to_string(rightId) + ")";
+    return op + "(" + to_string(leftId) + "," + to_string(rightId) + ")";
 }
 
-std::string DAGOptimizer::makeUnarySignature(const std::string& op, int childId) {
-    return op + "(" + std::to_string(childId) + ")";
+string DAGOptimizer::makeUnarySignature(const string& op, int childId) {
+    return op + "(" + to_string(childId) + ")";
 }
 
-void DAGOptimizer::detachVariable(const std::string& varName) {
+void DAGOptimizer::detachVariable(const string& varName) {
     if (varToNode.count(varName)) {
         int oldNodeId = varToNode[varName];
         auto& lbls = nodes[oldNodeId].labels;
-        lbls.erase(std::remove(lbls.begin(), lbls.end(), varName), lbls.end());
+        lbls.erase(remove(lbls.begin(), lbls.end(), varName), lbls.end());
         varToNode.erase(varName);
     }
 }
 
-void DAGOptimizer::attachVariable(const std::string& varName, int targetNodeId) {
+void DAGOptimizer::attachVariable(const string& varName, int targetNodeId) {
     detachVariable(varName);
     auto& lbls = nodes[targetNodeId].labels;
-    if (std::find(lbls.begin(), lbls.end(), varName) == lbls.end()) {
+    if (find(lbls.begin(), lbls.end(), varName) == lbls.end()) {
         lbls.push_back(varName);
     }
     varToNode[varName] = targetNodeId;
@@ -56,7 +58,7 @@ void DAGOptimizer::attachVariable(const std::string& varName, int targetNodeId) 
     }
 }
 
-std::string DAGOptimizer::getActiveVarForNode(int nodeId, const std::string& preferredName) const {
+string DAGOptimizer::getActiveVarForNode(int nodeId, const string& preferredName) const {
     if (nodeId < 0 || nodeId >= (int)nodes.size()) return "";
     const DAGNode& node = nodes[nodeId];
     if (node.isConstant) {
@@ -65,7 +67,7 @@ std::string DAGOptimizer::getActiveVarForNode(int nodeId, const std::string& pre
     if (!preferredName.empty() && varToNode.count(preferredName) && varToNode.at(preferredName) == nodeId) {
         return preferredName;
     }
-    for (const std::string& lbl : node.labels) {
+    for (const string& lbl : node.labels) {
         if (varToNode.count(lbl) && varToNode.at(lbl) == nodeId) {
             return lbl;
         }
@@ -74,10 +76,10 @@ std::string DAGOptimizer::getActiveVarForNode(int nodeId, const std::string& pre
     return node.op;
 }
 
-int DAGOptimizer::getOrCreateLeaf(const std::string& name) {
+int DAGOptimizer::getOrCreateLeaf(const string& name) {
     double numVal;
     if (Utils::isNumber(name, numVal)) {
-        std::string constKey = Utils::formatNumber(numVal);
+        string constKey = Utils::formatNumber(numVal);
         if (constToNode.count(constKey)) {
             return constToNode[constKey];
         }
@@ -118,7 +120,7 @@ int DAGOptimizer::getOrCreateLeaf(const std::string& name) {
 }
 
 int DAGOptimizer::getOrCreateConstantNode(double val) {
-    std::string constKey = Utils::formatNumber(val);
+    string constKey = Utils::formatNumber(val);
     if (constToNode.count(constKey)) {
         return constToNode[constKey];
     }
@@ -138,7 +140,7 @@ int DAGOptimizer::getOrCreateConstantNode(double val) {
     return id;
 }
 
-bool DAGOptimizer::evaluateConstant(const std::string& op, double v1, double v2, double& result) {
+bool DAGOptimizer::evaluateConstant(const string& op, double v1, double v2, double& result) {
     if (op == "+") { result = v1 + v2; return true; }
     if (op == "-") { result = v1 - v2; return true; }
     if (op == "*") { result = v1 * v2; return true; }
@@ -161,7 +163,7 @@ bool DAGOptimizer::evaluateConstant(const std::string& op, double v1, double v2,
     return false;
 }
 
-int DAGOptimizer::checkAlgebraicIdentity(const std::string& op, int leftId, int rightId, std::string& reason) {
+int DAGOptimizer::checkAlgebraicIdentity(const string& op, int leftId, int rightId, string& reason) {
     const DAGNode& left = nodes[leftId];
     const DAGNode& right = nodes[rightId];
 
@@ -220,21 +222,21 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
         attachVariable(inst.result, sourceId);
         stats.copiesPropagated++;
 
-        std::string srcVar = getActiveVarForNode(sourceId, inst.arg1);
+        string srcVar = getActiveVarForNode(sourceId, inst.arg1);
         step.targetNodeId = sourceId;
         step.optimizedTAC = inst.result + " = " + srcVar;
         step.optimizationType = "COPY_PROPAGATION";
         steps.push_back(step);
 
         optimizationLog.push_back("COPY PROPAGATION: '" + inst.result + "' aliases Node " + 
-                                 std::to_string(sourceId) + " (" + srcVar + ")");
+                                 to_string(sourceId) + " (" + srcVar + ")");
         return;
     }
 
     // 2. Unary Operation: res = op arg1
     if (inst.type == InstructionType::UNARY) {
         int childId = getOrCreateLeaf(inst.arg1);
-        std::string childVar = getActiveVarForNode(childId, inst.arg1);
+        string childVar = getActiveVarForNode(childId, inst.arg1);
 
         if (nodes[childId].isConstant) {
             double resVal;
@@ -256,10 +258,10 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
             return;
         }
 
-        std::string sig = makeUnarySignature(inst.op, childId);
+        string sig = makeUnarySignature(inst.op, childId);
         if (valueNumbering.count(sig)) {
             int existingId = valueNumbering[sig];
-            std::string repVar = nodes[existingId].primaryVar;
+            string repVar = nodes[existingId].primaryVar;
             attachVariable(inst.result, existingId);
             stats.redundantEliminated++;
 
@@ -269,7 +271,7 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
             steps.push_back(step);
 
             optimizationLog.push_back("CSE (UNARY): '" + inst.result + "' reused Node " + 
-                                     std::to_string(existingId) + " (" + repVar + ")");
+                                     to_string(existingId) + " (" + repVar + ")");
         } else {
             int newId = nodes.size();
             DAGNode newNode;
@@ -297,8 +299,8 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
     if (inst.type == InstructionType::BINARY) {
         int leftId = getOrCreateLeaf(inst.arg1);
         int rightId = getOrCreateLeaf(inst.arg2);
-        std::string leftVar = getActiveVarForNode(leftId, inst.arg1);
-        std::string rightVar = getActiveVarForNode(rightId, inst.arg2);
+        string leftVar = getActiveVarForNode(leftId, inst.arg1);
+        string rightVar = getActiveVarForNode(rightId, inst.arg2);
 
         // A. Constant Folding Check
         if (nodes[leftId].isConstant && nodes[rightId].isConstant) {
@@ -322,13 +324,13 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
         }
 
         // B. Algebraic Identities Check
-        std::string identityReason;
+        string identityReason;
         int simplifiedNodeId = checkAlgebraicIdentity(inst.op, leftId, rightId, identityReason);
         if (simplifiedNodeId != -1) {
             attachVariable(inst.result, simplifiedNodeId);
             stats.algebraicIdentities++;
 
-            std::string repVar = getActiveVarForNode(simplifiedNodeId);
+            string repVar = getActiveVarForNode(simplifiedNodeId);
             step.targetNodeId = simplifiedNodeId;
             step.optimizedTAC = inst.result + " = " + repVar;
             step.optimizationType = "ALGEBRAIC_IDENTITY";
@@ -341,10 +343,10 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
         }
 
         // C. Common Subexpression Elimination (CSE) via Value Numbering
-        std::string sig = makeSignature(inst.op, leftId, rightId);
+        string sig = makeSignature(inst.op, leftId, rightId);
         if (valueNumbering.count(sig)) {
             int existingId = valueNumbering[sig];
-            std::string repVar = nodes[existingId].primaryVar;
+            string repVar = nodes[existingId].primaryVar;
             attachVariable(inst.result, existingId);
             stats.redundantEliminated++;
 
@@ -355,7 +357,7 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
 
             optimizationLog.push_back("CSE (COMMON SUBEXPRESSION): '" + inst.result + " = " + 
                                      inst.arg1 + " " + inst.op + " " + inst.arg2 + 
-                                     "' maps to existing Node " + std::to_string(existingId) + 
+                                     "' maps to existing Node " + to_string(existingId) + 
                                      " [Represented by " + repVar + "]");
         } else {
             int newId = nodes.size();
@@ -380,15 +382,15 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
     }
 }
 
-void DAGOptimizer::processBlock(const std::vector<Instruction>& instructions) {
+void DAGOptimizer::processBlock(const vector<Instruction>& instructions) {
     clear();
     for (const auto& inst : instructions) {
         processInstruction(inst);
     }
 }
 
-std::vector<std::string> DAGOptimizer::generateOptimizedTAC() {
-    std::vector<std::string> optimizedTAC;
+vector<string> DAGOptimizer::generateOptimizedTAC() {
+    vector<string> optimizedTAC;
     for (const auto& step : steps) {
         optimizedTAC.push_back(step.optimizedTAC);
     }
@@ -396,8 +398,8 @@ std::vector<std::string> DAGOptimizer::generateOptimizedTAC() {
     return optimizedTAC;
 }
 
-std::vector<std::string> DAGOptimizer::generateCompactTAC() {
-    std::vector<std::string> compact;
+vector<string> DAGOptimizer::generateCompactTAC() {
+    vector<string> compact;
     for (const auto& step : steps) {
         if (step.optimizationType == "CSE" && step.original.result[0] == 't') {
             compact.push_back("// " + step.original.result + " eliminated (" + step.optimizedTAC + ")");
