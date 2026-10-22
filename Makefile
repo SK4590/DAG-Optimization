@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude
-SRC = src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/main.cpp
+CXXFLAGS = -std=c++17 -Wall -Wextra -static -Iinclude
+SRC = src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/RegisterAllocator.cpp src/CodeGen.cpp src/main.cpp
 TARGET = dag_optimizer.exe
 
 all: $(TARGET)
@@ -17,8 +17,11 @@ test: $(TARGET)
 	.\$(TARGET) samples/sample6_cfg_loop.tac optimized_sample6.tac
 	.\$(TARGET) samples/sample7_cfg_if_else.tac optimized_sample7.tac
 	.\$(TARGET) samples/sample8_cfg_lva_dce.tac optimized_sample8.tac
+	.\$(TARGET) samples/sample6_loop_sum.tac optimized_sample6_loop_sum.tac sample6_loop_sum.s
+	.\$(TARGET) samples/sample7_factorial.tac optimized_sample7_factorial.tac sample7_factorial.s
+	.\$(TARGET) samples/sample8_if_else_branches.tac optimized_sample8_if_else_branches.tac sample8_if_else_branches.s
 
 clean:
-	powershell -Command "Remove-Item -Force -ErrorAction SilentlyContinue $(TARGET), *.dot, optimized_*.tac"
+	powershell -Command "Remove-Item -Force -ErrorAction SilentlyContinue $(TARGET), *.dot, optimized_*.tac, *.s, *.asm"
 
 .PHONY: all test clean

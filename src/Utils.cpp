@@ -1,5 +1,7 @@
 #if __has_include("Utils.h")
     #include "Utils.h"
+#elif __has_include("include/Utils.h")
+    #include "include/Utils.h"
 #else
     #include "../include/Utils.h"
 #endif

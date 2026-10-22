@@ -1,6 +1,9 @@
 #if __has_include("Visualizer.h")
     #include "Visualizer.h"
     #include "CFG.h"
+#elif __has_include("include/Visualizer.h")
+    #include "include/Visualizer.h"
+    #include "include/CFG.h"
 #else
     #include "../include/Visualizer.h"
     #include "../include/CFG.h"
@@ -366,4 +369,44 @@ void Visualizer::printMultiBlockComparison(const CFG& initialCfg, const CFG& opt
     }
     cout << "=======================================================================\n\n";
 }
+
+void Visualizer::printThreeWayComparison(const vector<Instruction>& origInsts,
+                                        const vector<Instruction>& optInsts,
+                                        const vector<string>& asmCode,
+                                        int stackFrameSize,
+                                        int spills) {
+    cout << "\n===================================================================================================\n";
+    cout << "          COMPILER PIPELINE METRICS: TAC vs OPTIMIZED TAC vs TARGET MIPS ASSEMBLY                  \n";
+    cout << "===================================================================================================\n";
+    cout << " - Original TAC Instructions            : " << origInsts.size() << "\n";
+    cout << " - Fully Optimized TAC Instructions     : " << optInsts.size() << "\n";
+    if (!origInsts.empty()) {
+        double redPct = ((double)(origInsts.size() - optInsts.size()) / origInsts.size()) * 100.0;
+        cout << " - TAC Reduction Rate                   : " << fixed << setprecision(1) << redPct << "%\n";
+    }
+    cout << " - Generated Target Assembly Lines      : " << asmCode.size() << "\n";
+    cout << " - Target Stack Frame Size (Bytes)      : " << stackFrameSize << " ($sp aligned to 16 bytes)\n";
+    cout << " - Register Spills Handled              : " << spills << "\n";
+    cout << "===================================================================================================\n\n";
+
+    cout << "===================================================================================================\n";
+    cout << "                    THREE-WAY SIDE-BY-SIDE INSTRUCTION PIPELINE ALIGNMENT                          \n";
+    cout << "===================================================================================================\n";
+    cout << left << setw(30) << "1. Original TAC" 
+         << " | " << setw(30) << "2. Optimized TAC"
+         << " | " << "3. Target MIPS Assembly\n";
+    cout << "-------------------------------+--------------------------------+----------------------------------\n";
+
+    size_t maxRows = max({origInsts.size(), optInsts.size(), asmCode.size()});
+    for (size_t i = 0; i < maxRows; ++i) {
+        string orig = (i < origInsts.size()) ? origInsts[i].toString() : "";
+        string opt = (i < optInsts.size()) ? optInsts[i].toString() : "";
+        string asmL = (i < asmCode.size()) ? asmCode[i] : "";
+        cout << left << setw(30) << orig 
+             << " | " << setw(30) << opt 
+             << " | " << asmL << "\n";
+    }
+    cout << "===================================================================================================\n\n";
+}
+
 

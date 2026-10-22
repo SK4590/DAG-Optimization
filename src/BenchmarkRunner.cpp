@@ -3,11 +3,22 @@
     #include "TACParser.h"
     #include "Visualizer.h"
     #include "CFG.h"
+    #include "CodeGen.h"
+    #include "RegisterAllocator.h"
+#elif __has_include("include/BenchmarkRunner.h")
+    #include "include/BenchmarkRunner.h"
+    #include "include/TACParser.h"
+    #include "include/Visualizer.h"
+    #include "include/CFG.h"
+    #include "include/CodeGen.h"
+    #include "include/RegisterAllocator.h"
 #else
     #include "../include/BenchmarkRunner.h"
     #include "../include/TACParser.h"
     #include "../include/Visualizer.h"
     #include "../include/CFG.h"
+    #include "../include/CodeGen.h"
+    #include "../include/RegisterAllocator.h"
 #endif
 
 #include <iostream>
@@ -108,11 +119,69 @@ void BenchmarkRunner::runAllCFGBenchmarks() {
     runCFGBenchmark("TestCase8_CFG_LVA_DCE", "samples/sample8_cfg_lva_dce.tac");
 }
 
+void BenchmarkRunner::runCodeGenBenchmark(const string& testName, const string& filepath) {
+    cout << "\n#######################################################################\n";
+    cout << " RUNNING TARGET CODEGEN BENCHMARK: " << testName << "\n";
+    cout << " Input File: " << filepath << "\n";
+    cout << "#######################################################################\n";
+
+    vector<Instruction> origInstructions = TACParser::parseFile(filepath);
+    if (origInstructions.empty()) {
+        cerr << "[WARNING] No valid TAC instructions found in " << filepath << "\n";
+        return;
+    }
+
+    // 1. Construct CFG and run multi-block optimizations
+    CFG cfg;
+    cfg.construct(origInstructions);
+    cfg.optimizeLocalDAGs();
+    cfg.runDeadCodeElimination();
+    vector<Instruction> optInstructions = cfg.getAllInstructions();
+
+    // 2. Generate MIPS Target Machine Assembly
+    CodeGen codeGen;
+    string asmContent = codeGen.generateAssembly(optInstructions);
+    const auto& asmMetrics = codeGen.getMetrics();
+    int frameSize = codeGen.getAllocator().getStackFrameSize();
+
+    // 3. Display Side-by-Side 3-Way Metrics
+    Visualizer::printThreeWayComparison(origInstructions, optInstructions, 
+                                        codeGen.getAssemblyLines(), 
+                                        frameSize, asmMetrics.totalSpills);
+
+    // 4. Write optimized TAC and Assembly files
+    string outTacPath = "optimized_" + testName + ".tac";
+    ofstream outTac(outTacPath);
+    if (outTac.is_open()) {
+        for (const auto& line : cfg.getTACLines()) {
+            outTac << line << "\n";
+        }
+        outTac.close();
+        cout << "[SUCCESS] Wrote optimized TAC to: " << outTacPath << "\n";
+    }
+
+    string outAsmPath = testName + ".s";
+    ofstream outAsm(outAsmPath);
+    if (outAsm.is_open()) {
+        outAsm << asmContent;
+        outAsm.close();
+        cout << "[SUCCESS] Generated Target MIPS Assembly: " << outAsmPath << "\n";
+    }
+}
+
+void BenchmarkRunner::runAllCodeGenBenchmarks() {
+    runCodeGenBenchmark("TestCase6_LoopSum", "samples/sample6_loop_sum.tac");
+    runCodeGenBenchmark("TestCase7_Factorial", "samples/sample7_factorial.tac");
+    runCodeGenBenchmark("TestCase8_IfElseBranches", "samples/sample8_if_else_branches.tac");
+}
+
 void BenchmarkRunner::runCompleteSuite(DAGOptimizer& optimizer) {
     cout << "\n=======================================================================\n";
-    cout << "          EXECUTING COMPLETE BENCHMARK SUITE (REVIEWS 2 & 3)          \n";
+    cout << "       EXECUTING COMPLETE BENCHMARK SUITE (REVIEWS 1, 2 & 3 - 100%)    \n";
     cout << "=======================================================================\n";
     runAllBenchmarks(optimizer);
     runAllCFGBenchmarks();
+    runAllCodeGenBenchmarks();
 }
+
 

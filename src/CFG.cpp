@@ -2,6 +2,10 @@
     #include "CFG.h"
     #include "Utils.h"
     #include "TACParser.h"
+#elif __has_include("include/CFG.h")
+    #include "include/CFG.h"
+    #include "include/Utils.h"
+    #include "include/TACParser.h"
 #else
     #include "../include/CFG.h"
     #include "../include/Utils.h"
