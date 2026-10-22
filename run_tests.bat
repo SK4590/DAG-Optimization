@@ -1,10 +1,19 @@
 @echo off
+setlocal
+
+where g++ >nul 2>nul
+if errorlevel 1 (
+    if exist "%LOCALAPPDATA%\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin\g++.exe" (
+        set "PATH=%LOCALAPPDATA%\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin;%PATH%"
+    )
+)
+
 echo =======================================================================
 echo   BUILDING AND RUNNING DAG OPTIMIZER & CODEGEN (REVIEW 3 - 100%%)
 echo =======================================================================
 
 echo [1/3] Compiling Modular C++ Source Code...
-g++ -std=c++17 -Wall -Wextra -Iinclude src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/RegisterAllocator.cpp src/CodeGen.cpp src/main.cpp -o dag_optimizer.exe
+g++ -std=c++17 -Wall -Wextra -static -Iinclude src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/RegisterAllocator.cpp src/CodeGen.cpp src/main.cpp -o dag_optimizer.exe
 if errorlevel 1 (
     echo [ERROR] Compilation failed!
     pause

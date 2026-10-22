@@ -1,10 +1,23 @@
 # PowerShell Test Suite Runner for DAG Optimizer (Review 3 - 100% Milestone)
+
+# Ensure g++ is available in PATH even in pre-existing shell sessions
+if (-not (Get-Command g++ -ErrorAction SilentlyContinue)) {
+    $userPath = [System.Environment]::GetEnvironmentVariable("Path", "User")
+    $machinePath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    $env:Path = "$userPath;$machinePath;$env:Path"
+
+    $mingwBin = "C:\Users\Shobit\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
+    if (Test-Path $mingwBin) {
+        $env:Path = "$mingwBin;$env:Path"
+    }
+}
+
 Write-Host "=======================================================================" -ForegroundColor Cyan
 Write-Host "   BUILDING AND RUNNING DAG OPTIMIZER & CODEGEN (REVIEW 3 - 100%)" -ForegroundColor Cyan
 Write-Host "=======================================================================" -ForegroundColor Cyan
 
 Write-Host "`n[1/3] Compiling Modular C++ Source Code..." -ForegroundColor Yellow
-g++ -std=c++17 -Wall -Wextra -Iinclude src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/RegisterAllocator.cpp src/CodeGen.cpp src/main.cpp -o dag_optimizer.exe
+g++ -std=c++17 -Wall -Wextra -static -Iinclude src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/RegisterAllocator.cpp src/CodeGen.cpp src/main.cpp -o dag_optimizer.exe
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[ERROR] Compilation failed!" -ForegroundColor Red
     exit 1
