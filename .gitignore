@@ -1,6 +1,7 @@
 *.exe
 *.o
 *.obj
-dag_*.dot
+*.dot
 optimized_*.tac
 .vscode/
+

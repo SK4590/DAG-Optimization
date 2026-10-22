@@ -4,6 +4,7 @@
     #include "Utils.h"
     #include "TACParser.h"
     #include "DAGOptimizer.h"
+    #include "CFG.h"
     #include "Visualizer.h"
     #include "BenchmarkRunner.h"
 #else
@@ -12,6 +13,7 @@
     #include "../include/Utils.h"
     #include "../include/TACParser.h"
     #include "../include/DAGOptimizer.h"
+    #include "../include/CFG.h"
     #include "../include/Visualizer.h"
     #include "../include/BenchmarkRunner.h"
 #endif
@@ -25,15 +27,15 @@ using namespace std;
 
 void displayMenu() {
     cout << "\n=======================================================================\n";
-    cout << "     DAG-BASED BASIC BLOCK OPTIMIZER (REVIEW 2 - 75% MILESTONE)        \n";
+    cout << "     DAG-BASED OPTIMIZATION & CFG ENGINE (REVIEW 3 - 100% COMPLETE)    \n";
     cout << "=======================================================================\n";
-    cout << " 1. Run Complete Benchmark Suite (All 5 Built-in Test Cases)\n";
-    cout << " 2. Run Test Case 1: Standard CSE (from Project README)\n";
-    cout << " 3. Run Test Case 2: Commutative CSE (a+b == b+a, x*y == y*x)\n";
-    cout << " 4. Run Test Case 3: Variable Reassignment with Node Kill Semantics\n";
-    cout << " 5. Run Test Case 4: Constant Folding & Algebraic Identities\n";
-    cout << " 6. Run Test Case 5: Realistic Matrix Array Offset Calculation\n";
-    cout << " 7. Optimize Custom TAC File\n";
+    cout << " 1. Run Complete Benchmark Suite (All 8 Tests: Review 2 + Review 3)\n";
+    cout << " 2. Run Review 2 Suite (Local DAG Optimizations 1-5)\n";
+    cout << " 3. Run Review 3 Suite (Multi-Block CFG, LVA & DCE Tests 6-8)\n";
+    cout << " 4. Run Test Case 6: While Loop with Conditional Branch & Back-Edge\n";
+    cout << " 5. Run Test Case 7: If-Else Diamond with Branching & Fallthrough\n";
+    cout << " 6. Run Test Case 8: Multi-Block Loop with Transitive LVA & DCE\n";
+    cout << " 7. Optimize Custom TAC File (Auto-detect Single-Block vs Multi-Block)\n";
     cout << " 8. Interactive TAC Terminal Input\n";
     cout << " 9. Exit\n";
     cout << "-----------------------------------------------------------------------\n";
@@ -55,25 +57,73 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        optimizer.processBlock(instructions);
-        Visualizer::printOptimizationLogs(optimizer);
-        Visualizer::printDAG(optimizer);
-
-        vector<string> optimized = optimizer.generateOptimizedTAC();
-        Visualizer::printSideBySideComparison(optimizer);
-        Visualizer::printPerformanceReport(optimizer);
-
-        // Write output TAC file
-        ofstream outFile(outputFile);
-        if (outFile.is_open()) {
-            for (const auto& line : optimized) {
-                outFile << line << "\n";
+        bool hasControlFlow = false;
+        for (const auto& inst : instructions) {
+            if (inst.isControlFlow()) {
+                hasControlFlow = true;
+                break;
             }
-            outFile.close();
-            cout << "[SUCCESS] Wrote optimized TAC to: " << outputFile << "\n";
         }
 
-        Visualizer::exportGraphviz(optimizer, "dag_output.dot");
+        CFG initialCfg;
+        initialCfg.construct(instructions);
+
+        if (hasControlFlow || initialCfg.getBlockCount() > 1) {
+            cout << "[INFO] Multi-Block Control Flow Graph detected (" 
+                 << initialCfg.getBlockCount() << " basic blocks).\n";
+            
+            cout << "\n>>> Phase 1: CFG Topology & Leader Identification\n";
+            Visualizer::printCFG(initialCfg);
+
+            cout << "\n>>> Phase 2: Live Variable Analysis on Initial CFG\n";
+            Visualizer::printLVAReport(initialCfg);
+
+            CFG optimizedCfg = initialCfg;
+            cout << "\n>>> Phase 3: Multi-Block Local DAG Optimization Pass\n";
+            optimizedCfg.optimizeLocalDAGs();
+
+            cout << "\n>>> Phase 4: Global Live Variable Analysis & Dead Code Elimination (DCE)\n";
+            int deadEliminated = optimizedCfg.runDeadCodeElimination();
+
+            Visualizer::printCFG(optimizedCfg);
+            Visualizer::printLVAReport(optimizedCfg);
+            Visualizer::printMultiBlockComparison(initialCfg, optimizedCfg, deadEliminated);
+
+            // Export Graphviz CFG DOT file
+            Visualizer::exportCFG(optimizedCfg, "cfg.dot");
+
+            // Write output TAC file
+            ofstream outFile(outputFile);
+            if (outFile.is_open()) {
+                for (const auto& line : optimizedCfg.getTACLines()) {
+                    outFile << line << "\n";
+                }
+                outFile.close();
+                cout << "[SUCCESS] Wrote optimized TAC to: " << outputFile << "\n";
+            }
+        } else {
+            cout << "[INFO] Single basic block detected. Running local DAG optimization...\n";
+            optimizer.processBlock(instructions);
+            Visualizer::printOptimizationLogs(optimizer);
+            Visualizer::printDAG(optimizer);
+
+            vector<string> optimized = optimizer.generateOptimizedTAC();
+            Visualizer::printSideBySideComparison(optimizer);
+            Visualizer::printPerformanceReport(optimizer);
+
+            // Write output TAC file
+            ofstream outFile(outputFile);
+            if (outFile.is_open()) {
+                for (const auto& line : optimized) {
+                    outFile << line << "\n";
+                }
+                outFile.close();
+                cout << "[SUCCESS] Wrote optimized TAC to: " << outputFile << "\n";
+            }
+
+            Visualizer::exportGraphviz(optimizer, "dag_output.dot");
+            Visualizer::exportCFG(initialCfg, "cfg.dot");
+        }
         return 0;
     }
 
@@ -90,22 +140,35 @@ int main(int argc, char* argv[]) {
         }
 
         if (choice == 1) {
-            BenchmarkRunner::runAllBenchmarks(optimizer);
+            BenchmarkRunner::runCompleteSuite(optimizer);
         } else if (choice == 2) {
-            BenchmarkRunner::runBenchmark("TestCase1_README", "samples/sample1_readme.tac", optimizer);
+            BenchmarkRunner::runAllBenchmarks(optimizer);
         } else if (choice == 3) {
-            BenchmarkRunner::runBenchmark("TestCase2_Commutative", "samples/sample2_commutative.tac", optimizer);
+            BenchmarkRunner::runAllCFGBenchmarks();
         } else if (choice == 4) {
-            BenchmarkRunner::runBenchmark("TestCase3_Reassignment", "samples/sample3_reassignment.tac", optimizer);
+            BenchmarkRunner::runCFGBenchmark("TestCase6_CFG_Loop", "samples/sample6_cfg_loop.tac");
         } else if (choice == 5) {
-            BenchmarkRunner::runBenchmark("TestCase4_ConstantFolding", "samples/sample4_constant_folding.tac", optimizer);
+            BenchmarkRunner::runCFGBenchmark("TestCase7_CFG_IfElse", "samples/sample7_cfg_if_else.tac");
         } else if (choice == 6) {
-            BenchmarkRunner::runBenchmark("TestCase5_MatrixOffset", "samples/sample5_matrix_offset.tac", optimizer);
+            BenchmarkRunner::runCFGBenchmark("TestCase8_CFG_LVA_DCE", "samples/sample8_cfg_lva_dce.tac");
         } else if (choice == 7) {
             cout << "Enter path to TAC file: ";
             string path;
             cin >> path;
-            BenchmarkRunner::runBenchmark("CustomFile", path, optimizer);
+            vector<Instruction> insts = TACParser::parseFile(path);
+            if (insts.empty()) {
+                cerr << "[ERROR] Could not parse file: " << path << "\n";
+            } else {
+                bool hasCF = false;
+                for (const auto& i : insts) {
+                    if (i.isControlFlow()) { hasCF = true; break; }
+                }
+                if (hasCF) {
+                    BenchmarkRunner::runCFGBenchmark("CustomCFG", path);
+                } else {
+                    BenchmarkRunner::runBenchmark("CustomSingleBlock", path, optimizer);
+                }
+            }
         } else if (choice == 8) {
             cout << "\nEnter TAC instructions line by line (Type 'END' on a new line when done):\n";
             string line;
@@ -122,18 +185,40 @@ int main(int argc, char* argv[]) {
             }
 
             if (!userInstructions.empty()) {
-                optimizer.processBlock(userInstructions);
-                Visualizer::printOptimizationLogs(optimizer);
-                Visualizer::printDAG(optimizer);
-                optimizer.generateOptimizedTAC();
-                Visualizer::printSideBySideComparison(optimizer);
-                Visualizer::printPerformanceReport(optimizer);
-                Visualizer::exportGraphviz(optimizer, "dag_interactive.dot");
+                bool hasCF = false;
+                for (const auto& i : userInstructions) {
+                    if (i.isControlFlow()) { hasCF = true; break; }
+                }
+                if (hasCF) {
+                    CFG cfg;
+                    cfg.construct(userInstructions);
+                    cout << "\n>>> Initial CFG Partitioning:\n";
+                    Visualizer::printCFG(cfg);
+                    Visualizer::printLVAReport(cfg);
+
+                    CFG optCfg = cfg;
+                    optCfg.optimizeLocalDAGs();
+                    int deadElim = optCfg.runDeadCodeElimination();
+
+                    cout << "\n>>> Post-Optimization CFG:\n";
+                    Visualizer::printCFG(optCfg);
+                    Visualizer::printLVAReport(optCfg);
+                    Visualizer::printMultiBlockComparison(cfg, optCfg, deadElim);
+                    Visualizer::exportCFG(optCfg, "cfg_interactive.dot");
+                } else {
+                    optimizer.processBlock(userInstructions);
+                    Visualizer::printOptimizationLogs(optimizer);
+                    Visualizer::printDAG(optimizer);
+                    optimizer.generateOptimizedTAC();
+                    Visualizer::printSideBySideComparison(optimizer);
+                    Visualizer::printPerformanceReport(optimizer);
+                    Visualizer::exportGraphviz(optimizer, "dag_interactive.dot");
+                }
             } else {
                 cout << "[INFO] No instructions provided.\n";
             }
         } else if (choice == 9) {
-            cout << "Exiting DAG Optimizer. Thank you!\n";
+            cout << "Exiting DAG Optimizer & CFG Engine. Thank you!\n";
             break;
         } else {
             cout << "[ERROR] Invalid option. Please select 1-9.\n";
@@ -142,3 +227,4 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+

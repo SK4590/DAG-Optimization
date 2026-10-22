@@ -6,10 +6,15 @@
 
 using namespace std;
 
+class CFG;
+
 class BenchmarkRunner {
 public:
     static void runBenchmark(const string& testName, const string& filepath, DAGOptimizer& optimizer);
     static void runAllBenchmarks(DAGOptimizer& optimizer);
+    static void runCFGBenchmark(const string& testName, const string& filepath);
+    static void runAllCFGBenchmarks();
+    static void runCompleteSuite(DAGOptimizer& optimizer);
 };
 
 #endif // BENCHMARKRUNNER_H
