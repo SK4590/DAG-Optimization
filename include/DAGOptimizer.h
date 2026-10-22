@@ -36,6 +36,7 @@ public:
     void processBlock(const vector<Instruction>& instructions);
     vector<string> generateOptimizedTAC();
     vector<string> generateCompactTAC();
+    vector<Instruction> generateOptimizedInstructions();
 
     // Accessors
     const vector<DAGNode>& getNodes() const { return nodes; }

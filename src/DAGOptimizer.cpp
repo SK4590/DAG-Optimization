@@ -1,9 +1,11 @@
 #if __has_include("DAGOptimizer.h")
     #include "DAGOptimizer.h"
     #include "Utils.h"
+    #include "TACParser.h"
 #else
     #include "../include/DAGOptimizer.h"
     #include "../include/Utils.h"
+    #include "../include/TACParser.h"
 #endif
 
 #include <algorithm>
@@ -63,6 +65,13 @@ string DAGOptimizer::getActiveVarForNode(int nodeId, const string& preferredName
     const DAGNode& node = nodes[nodeId];
     if (node.isConstant) {
         return Utils::formatNumber(node.constValue);
+    }
+    // If the preferredName is a temporary alias and the node already has a primary variable,
+    // propagate the primary variable to enable dead temporary copy elimination
+    if (!node.primaryVar.empty() && node.primaryVar != preferredName) {
+        if (!preferredName.empty() && preferredName[0] == 't') {
+            return node.primaryVar;
+        }
     }
     if (!preferredName.empty() && varToNode.count(preferredName) && varToNode.at(preferredName) == nodeId) {
         return preferredName;
@@ -215,6 +224,40 @@ void DAGOptimizer::processInstruction(const Instruction& inst) {
     stats.initialInstructions++;
     ProcessedStep step;
     step.original = inst;
+
+    // Handle Control Flow Instructions (Labels, Gotos, Conditional Branches)
+    if (inst.type == InstructionType::LABEL) {
+        step.targetNodeId = -1;
+        step.optimizedTAC = inst.toString();
+        step.optimizationType = "LABEL";
+        steps.push_back(step);
+        return;
+    }
+
+    if (inst.type == InstructionType::GOTO) {
+        step.targetNodeId = -1;
+        step.optimizedTAC = inst.toString();
+        step.optimizationType = "JUMP";
+        steps.push_back(step);
+        return;
+    }
+
+    if (inst.isBranch()) {
+        Instruction optInst = inst;
+        if (!inst.arg1.empty() && varToNode.count(inst.arg1)) {
+            int nId = varToNode[inst.arg1];
+            optInst.arg1 = getActiveVarForNode(nId, inst.arg1);
+        }
+        if (!inst.arg2.empty() && varToNode.count(inst.arg2)) {
+            int nId = varToNode[inst.arg2];
+            optInst.arg2 = getActiveVarForNode(nId, inst.arg2);
+        }
+        step.targetNodeId = -1;
+        step.optimizedTAC = optInst.toString();
+        step.optimizationType = "BRANCH";
+        steps.push_back(step);
+        return;
+    }
 
     // 1. Copy / Direct Constant assignment: res = arg1
     if (inst.type == InstructionType::COPY || inst.type == InstructionType::CONSTANT) {
@@ -409,3 +452,17 @@ vector<string> DAGOptimizer::generateCompactTAC() {
     }
     return compact;
 }
+
+vector<Instruction> DAGOptimizer::generateOptimizedInstructions() {
+    vector<Instruction> result;
+    for (const auto& step : steps) {
+        Instruction inst;
+        if (TACParser::parseLine(step.optimizedTAC, inst)) {
+            result.push_back(inst);
+        } else {
+            result.push_back(step.original);
+        }
+    }
+    return result;
+}
+
