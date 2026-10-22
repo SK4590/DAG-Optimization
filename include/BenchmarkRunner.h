@@ -14,8 +14,6 @@ public:
     static void runAllBenchmarks(DAGOptimizer& optimizer);
     static void runCFGBenchmark(const string& testName, const string& filepath);
     static void runAllCFGBenchmarks();
-    static void runCodeGenBenchmark(const string& testName, const string& filepath);
-    static void runAllCodeGenBenchmarks();
     static void runCompleteSuite(DAGOptimizer& optimizer);
 };
 
