@@ -3,5 +3,7 @@
 *.obj
 *.dot
 optimized_*.tac
+*.s
+*.asm
+dag_optimizer
 .vscode/
-
