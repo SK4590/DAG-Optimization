@@ -20,6 +20,11 @@ public:
     static void printCFG(const CFG& cfg);
     static void printLVAReport(const CFG& cfg);
     static void printMultiBlockComparison(const CFG& initialCfg, const CFG& optimizedCfg, int deadEliminated);
+    static void printThreeWayComparison(const vector<Instruction>& origInsts,
+                                        const vector<Instruction>& optInsts,
+                                        const vector<string>& asmCode,
+                                        int stackFrameSize,
+                                        int spills);
 };
 
 #endif // VISUALIZER_H
