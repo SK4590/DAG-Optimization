@@ -15,9 +15,12 @@ using namespace std;
 struct RegDescriptor {
     string name;              // e.g. "$t0", "$t1", "$s0"
     string currentVar;        // Variable currently residing in register (or empty)
-    bool isFree = true;       // True if no variable is mapped
-    bool isDirty = false;     // True if value was modified and not yet saved to memory
-    int lastUsed = 0;         // Timestamp for Least-Recently-Used (LRU) spilling
+    bool isFree;              // True if no variable is mapped
+    bool isDirty;             // True if value was modified and not yet saved to memory
+    int lastUsed;             // Timestamp for Least-Recently-Used (LRU) spilling
+
+    RegDescriptor() 
+        : name(""), currentVar(""), isFree(true), isDirty(false), lastUsed(0) {}
 };
 
 // ============================================================================
@@ -27,19 +30,26 @@ struct RegDescriptor {
 struct VarLocation {
     string varName;
     string inRegister;        // Register name if currently resident (or empty)
-    int stackOffset = -1;     // Offset relative to $sp (e.g. 0, 4, 8, ...)
-    bool inMemory = false;    // True if a valid copy exists in stack memory
+    int stackOffset;          // Offset relative to $sp (e.g. 0, 4, 8, ...)
+    bool inMemory;            // True if a valid copy exists in stack memory
+
+    VarLocation() 
+        : varName(""), inRegister(""), stackOffset(-1), inMemory(false) {}
 };
 
 // ============================================================================
 // Register Allocator Statistics
 // ============================================================================
 struct AllocatorStats {
-    int registerAllocations = 0;
-    int registerSpills = 0;
-    int memoryLoads = 0;
-    int memoryStores = 0;
-    int maxRegistersUsed = 0;
+    int registerAllocations;
+    int registerSpills;
+    int memoryLoads;
+    int memoryStores;
+    int maxRegistersUsed;
+
+    AllocatorStats() 
+        : registerAllocations(0), registerSpills(0), memoryLoads(0), 
+          memoryStores(0), maxRegistersUsed(0) {}
 };
 
 // ============================================================================
@@ -51,8 +61,8 @@ private:
     vector<RegDescriptor> registers;
     unordered_map<string, int> regNameToIndex;
     unordered_map<string, VarLocation> varTable;
-    int timer = 0;
-    int nextStackOffset = 0;  // Grows by 4 bytes per spilled variable
+    int timer;
+    int nextStackOffset;      // Grows by 4 bytes per spilled variable
     AllocatorStats stats;
 
     int findFreeRegister();
