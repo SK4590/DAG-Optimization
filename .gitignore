@@ -6,4 +6,5 @@ optimized_*.tac
 *.s
 *.asm
 dag_optimizer
+dag_optimizer_linux
 .vscode/

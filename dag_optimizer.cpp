@@ -16,8 +16,6 @@
 #include "include/CFG.h"
 #include "include/Visualizer.h"
 #include "include/BenchmarkRunner.h"
-#include "include/RegisterAllocator.h"
-#include "include/CodeGen.h"
 
 #include "src/Utils.cpp"
 #include "src/TACParser.cpp"
@@ -25,6 +23,4 @@
 #include "src/CFG.cpp"
 #include "src/Visualizer.cpp"
 #include "src/BenchmarkRunner.cpp"
-#include "src/RegisterAllocator.cpp"
-#include "src/CodeGen.cpp"
 #include "src/main.cpp"
