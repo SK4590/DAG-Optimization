@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude
+CXXFLAGS = -std=c++17 -Wall -Wextra -static -Iinclude
 SRC = src/Utils.cpp src/TACParser.cpp src/DAGOptimizer.cpp src/CFG.cpp src/Visualizer.cpp src/BenchmarkRunner.cpp src/RegisterAllocator.cpp src/CodeGen.cpp src/main.cpp
 TARGET = dag_optimizer.exe
 
