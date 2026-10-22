@@ -1,6 +1,9 @@
 #if __has_include("TACParser.h")
     #include "TACParser.h"
     #include "Utils.h"
+#elif __has_include("include/TACParser.h")
+    #include "include/TACParser.h"
+    #include "include/Utils.h"
 #else
     #include "../include/TACParser.h"
     #include "../include/Utils.h"

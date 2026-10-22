@@ -5,6 +5,13 @@
     #include "CFG.h"
     #include "CodeGen.h"
     #include "RegisterAllocator.h"
+#elif __has_include("include/BenchmarkRunner.h")
+    #include "include/BenchmarkRunner.h"
+    #include "include/TACParser.h"
+    #include "include/Visualizer.h"
+    #include "include/CFG.h"
+    #include "include/CodeGen.h"
+    #include "include/RegisterAllocator.h"
 #else
     #include "../include/BenchmarkRunner.h"
     #include "../include/TACParser.h"

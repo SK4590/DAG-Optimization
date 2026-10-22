@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "Instruction.h"
 #include "DAGOptimizer.h"
 
 using namespace std;

@@ -1,6 +1,9 @@
 #if __has_include("CodeGen.h")
     #include "CodeGen.h"
     #include "Utils.h"
+#elif __has_include("include/CodeGen.h")
+    #include "include/CodeGen.h"
+    #include "include/Utils.h"
 #else
     #include "../include/CodeGen.h"
     #include "../include/Utils.h"

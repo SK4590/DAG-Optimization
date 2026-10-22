@@ -2,6 +2,10 @@
     #include "DAGOptimizer.h"
     #include "Utils.h"
     #include "TACParser.h"
+#elif __has_include("include/DAGOptimizer.h")
+    #include "include/DAGOptimizer.h"
+    #include "include/Utils.h"
+    #include "include/TACParser.h"
 #else
     #include "../include/DAGOptimizer.h"
     #include "../include/Utils.h"

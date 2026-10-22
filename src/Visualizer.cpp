@@ -1,6 +1,9 @@
 #if __has_include("Visualizer.h")
     #include "Visualizer.h"
     #include "CFG.h"
+#elif __has_include("include/Visualizer.h")
+    #include "include/Visualizer.h"
+    #include "include/CFG.h"
 #else
     #include "../include/Visualizer.h"
     #include "../include/CFG.h"

@@ -9,6 +9,17 @@
     #include "BenchmarkRunner.h"
     #include "CodeGen.h"
     #include "RegisterAllocator.h"
+#elif __has_include("include/Instruction.h")
+    #include "include/Instruction.h"
+    #include "include/DAGNode.h"
+    #include "include/Utils.h"
+    #include "include/TACParser.h"
+    #include "include/DAGOptimizer.h"
+    #include "include/CFG.h"
+    #include "include/Visualizer.h"
+    #include "include/BenchmarkRunner.h"
+    #include "include/CodeGen.h"
+    #include "include/RegisterAllocator.h"
 #else
     #include "../include/Instruction.h"
     #include "../include/DAGNode.h"

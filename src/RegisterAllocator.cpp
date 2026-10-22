@@ -1,6 +1,9 @@
 #if __has_include("RegisterAllocator.h")
     #include "RegisterAllocator.h"
     #include "Utils.h"
+#elif __has_include("include/RegisterAllocator.h")
+    #include "include/RegisterAllocator.h"
+    #include "include/Utils.h"
 #else
     #include "../include/RegisterAllocator.h"
     #include "../include/Utils.h"
