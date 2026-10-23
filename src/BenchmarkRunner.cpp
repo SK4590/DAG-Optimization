@@ -22,8 +22,7 @@ using namespace std;
 
 void BenchmarkRunner::runBenchmark(const string& testName, const string& filepath, DAGOptimizer& optimizer) {
     cout << "\n#######################################################################\n";
-    cout << " RUNNING BENCHMARK: " << testName << "\n";
-    cout << " File: " << filepath << "\n";
+    cout << " RUNNING BENCHMARK: " << testName << " (" << filepath << ")\n";
     cout << "#######################################################################\n";
 
     vector<Instruction> instructions = TACParser::parseFile(filepath);
@@ -32,16 +31,9 @@ void BenchmarkRunner::runBenchmark(const string& testName, const string& filepat
         return;
     }
 
-    cout << "Original Instructions Read (" << instructions.size() << "):\n";
-    for (size_t i = 0; i < instructions.size(); ++i) {
-        cout << "  " << (i + 1) << ". " << instructions[i].toString() << "\n";
-    }
-
     optimizer.processBlock(instructions);
-    Visualizer::printOptimizationLogs(optimizer);
-    Visualizer::printDAG(optimizer);
-
     optimizer.generateOptimizedTAC();
+
     Visualizer::printSideBySideComparison(optimizer);
     Visualizer::printPerformanceReport(optimizer);
 
@@ -59,8 +51,7 @@ void BenchmarkRunner::runAllBenchmarks(DAGOptimizer& optimizer) {
 
 void BenchmarkRunner::runCFGBenchmark(const string& testName, const string& filepath) {
     cout << "\n#######################################################################\n";
-    cout << " RUNNING CFG BENCHMARK: " << testName << "\n";
-    cout << " File: " << filepath << "\n";
+    cout << " RUNNING CFG BENCHMARK: " << testName << " (" << filepath << ")\n";
     cout << "#######################################################################\n";
 
     vector<Instruction> instructions = TACParser::parseFile(filepath);
@@ -72,24 +63,10 @@ void BenchmarkRunner::runCFGBenchmark(const string& testName, const string& file
     CFG initialCfg;
     initialCfg.construct(instructions);
 
-    cout << "\n>>> Phase 1: CFG Leader Identification & Block Partitioning\n";
-    Visualizer::printCFG(initialCfg);
-    string initialDot = "cfg_" + testName + "_initial.dot";
-    Visualizer::exportCFG(initialCfg, initialDot);
-
-    cout << "\n>>> Phase 2: Live Variable Analysis on Initial CFG\n";
-    Visualizer::printLVAReport(initialCfg);
-
-    // Multi-Block Optimization Pipeline
     CFG optimizedCfg = initialCfg;
-    cout << "\n>>> Phase 3: Multi-Block Local DAG Optimization Pass\n";
     optimizedCfg.optimizeLocalDAGs();
-
-    cout << "\n>>> Phase 4: Global LVA & Global Dead Code Elimination (DCE)\n";
     int deadEliminated = optimizedCfg.runDeadCodeElimination();
 
-    Visualizer::printCFG(optimizedCfg);
-    Visualizer::printLVAReport(optimizedCfg);
     Visualizer::printMultiBlockComparison(initialCfg, optimizedCfg, deadEliminated);
 
     string finalDot = "cfg_" + testName + ".dot";

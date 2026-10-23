@@ -55,12 +55,27 @@ int main(int argc, char* argv[]) {
     DAGOptimizer optimizer;
 
     // CLI Argument mode:
-    // Syntax: ./dag_optimizer <input_file> [output_tac_file]
     if (argc >= 2) {
-        string inputFile = argv[1];
-        string outputFile = (argc >= 3) ? argv[2] : "optimized_output.tac";
+        bool verbose = false;
+        string inputFile;
+        string outputFile = "optimized_output.tac";
+        for (int i = 1; i < argc; ++i) {
+            string arg = argv[i];
+            if (arg == "-v" || arg == "--verbose") {
+                verbose = true;
+            } else if (inputFile.empty()) {
+                inputFile = arg;
+            } else if (outputFile == "optimized_output.tac") {
+                outputFile = arg;
+            }
+        }
 
-        cout << "[INFO] Processing TAC file from command line: " << inputFile << "\n";
+        if (inputFile.empty()) {
+            cerr << "[ERROR] Expected input file.\n";
+            return 1;
+        }
+
+        cout << "[INFO] Processing TAC file: " << inputFile << "\n";
         vector<Instruction> instructions = TACParser::parseFile(inputFile);
         if (instructions.empty()) {
             cerr << "[ERROR] Could not parse TAC instructions from " << inputFile << "\n";
@@ -82,21 +97,23 @@ int main(int argc, char* argv[]) {
             cout << "[INFO] Multi-Block Control Flow Graph detected (" 
                  << initialCfg.getBlockCount() << " basic blocks).\n";
             
-            cout << "\n>>> Phase 1: CFG Topology & Leader Identification\n";
-            Visualizer::printCFG(initialCfg);
-
-            cout << "\n>>> Phase 2: Live Variable Analysis on Initial CFG\n";
-            Visualizer::printLVAReport(initialCfg);
+            if (verbose) {
+                cout << "\n>>> Phase 1: CFG Topology & Leader Identification\n";
+                Visualizer::printCFG(initialCfg);
+                cout << "\n>>> Phase 2: Live Variable Analysis on Initial CFG\n";
+                Visualizer::printLVAReport(initialCfg);
+            }
 
             CFG optimizedCfg = initialCfg;
-            cout << "\n>>> Phase 3: Multi-Block Local DAG Optimization Pass\n";
             optimizedCfg.optimizeLocalDAGs();
-
-            cout << "\n>>> Phase 4: Global Live Variable Analysis & Dead Code Elimination (DCE)\n";
             int deadEliminated = optimizedCfg.runDeadCodeElimination();
 
-            Visualizer::printCFG(optimizedCfg);
-            Visualizer::printLVAReport(optimizedCfg);
+            if (verbose) {
+                cout << "\n>>> Post-Optimization CFG & LVA:\n";
+                Visualizer::printCFG(optimizedCfg);
+                Visualizer::printLVAReport(optimizedCfg);
+            }
+
             Visualizer::printMultiBlockComparison(initialCfg, optimizedCfg, deadEliminated);
 
             // Export Graphviz CFG DOT file
@@ -114,8 +131,11 @@ int main(int argc, char* argv[]) {
         } else {
             cout << "[INFO] Single basic block detected. Running local DAG optimization...\n";
             optimizer.processBlock(instructions);
-            Visualizer::printOptimizationLogs(optimizer);
-            Visualizer::printDAG(optimizer);
+
+            if (verbose) {
+                Visualizer::printOptimizationLogs(optimizer);
+                Visualizer::printDAG(optimizer);
+            }
 
             vector<string> optimized = optimizer.generateOptimizedTAC();
             Visualizer::printSideBySideComparison(optimizer);
@@ -177,20 +197,10 @@ int main(int argc, char* argv[]) {
                 CFG initialCfg;
                 initialCfg.construct(insts);
                 if (hasCF || initialCfg.getBlockCount() > 1) {
-                    cout << "\n>>> Phase 1: CFG Topology & Leader Identification\n";
-                    Visualizer::printCFG(initialCfg);
-                    cout << "\n>>> Phase 2: Live Variable Analysis on Initial CFG\n";
-                    Visualizer::printLVAReport(initialCfg);
-
                     CFG optCfg = initialCfg;
-                    cout << "\n>>> Phase 3: Multi-Block Local DAG Optimization Pass\n";
                     optCfg.optimizeLocalDAGs();
-
-                    cout << "\n>>> Phase 4: Live Variable Analysis & Dead Code Elimination (DCE)\n";
                     int deadElim = optCfg.runDeadCodeElimination();
 
-                    Visualizer::printCFG(optCfg);
-                    Visualizer::printLVAReport(optCfg);
                     Visualizer::printMultiBlockComparison(initialCfg, optCfg, deadElim);
                     Visualizer::exportCFG(optCfg, "cfg_custom.dot");
 
@@ -202,9 +212,7 @@ int main(int argc, char* argv[]) {
                     }
                 } else {
                     optimizer.processBlock(insts);
-                    Visualizer::printOptimizationLogs(optimizer);
-                    Visualizer::printDAG(optimizer);
-                    vector<string> optLines = optimizer.generateOptimizedTAC();
+                    optimizer.generateOptimizedTAC();
                     Visualizer::printSideBySideComparison(optimizer);
                     Visualizer::printPerformanceReport(optimizer);
                     Visualizer::exportGraphviz(optimizer, "dag_custom.dot");
@@ -212,7 +220,7 @@ int main(int argc, char* argv[]) {
 
                     ofstream outFile("optimized_custom.tac");
                     if (outFile.is_open()) {
-                        for (const auto& line : optLines) outFile << line << "\n";
+                        for (const auto& line : optimizer.generateOptimizedTAC()) outFile << line << "\n";
                         outFile.close();
                         cout << "[SUCCESS] Wrote optimized TAC to: optimized_custom.tac\n";
                     }
@@ -242,17 +250,11 @@ int main(int argc, char* argv[]) {
                 if (hasCF) {
                     CFG cfg;
                     cfg.construct(userInstructions);
-                    cout << "\n>>> Initial CFG Partitioning:\n";
-                    Visualizer::printCFG(cfg);
-                    Visualizer::printLVAReport(cfg);
 
                     CFG optCfg = cfg;
                     optCfg.optimizeLocalDAGs();
                     int deadElim = optCfg.runDeadCodeElimination();
 
-                    cout << "\n>>> Post-Optimization CFG:\n";
-                    Visualizer::printCFG(optCfg);
-                    Visualizer::printLVAReport(optCfg);
                     Visualizer::printMultiBlockComparison(cfg, optCfg, deadElim);
                     Visualizer::exportCFG(optCfg, "cfg_interactive.dot");
 
@@ -264,16 +266,14 @@ int main(int argc, char* argv[]) {
                     }
                 } else {
                     optimizer.processBlock(userInstructions);
-                    Visualizer::printOptimizationLogs(optimizer);
-                    Visualizer::printDAG(optimizer);
-                    vector<string> optLines = optimizer.generateOptimizedTAC();
+                    optimizer.generateOptimizedTAC();
                     Visualizer::printSideBySideComparison(optimizer);
                     Visualizer::printPerformanceReport(optimizer);
                     Visualizer::exportGraphviz(optimizer, "dag_interactive.dot");
 
                     ofstream outFile("optimized_interactive.tac");
                     if (outFile.is_open()) {
-                        for (const auto& l : optLines) outFile << l << "\n";
+                        for (const auto& l : optimizer.generateOptimizedTAC()) outFile << l << "\n";
                         outFile.close();
                         cout << "[SUCCESS] Wrote optimized TAC to: optimized_interactive.tac\n";
                     }
@@ -281,7 +281,8 @@ int main(int argc, char* argv[]) {
             } else {
                 cout << "[INFO] No instructions provided.\n";
             }
-        } else if (choice == 9) {
+        }
+ else if (choice == 9) {
             cout << "Exiting DAG Optimizer & CFG Engine. Thank you!\n";
             break;
         } else {

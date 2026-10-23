@@ -341,20 +341,6 @@ void Visualizer::printMultiBlockComparison(const CFG& initialCfg, const CFG& opt
     auto finalInsts = optimizedCfg.getAllInstructions();
 
     cout << "\n=======================================================================\n";
-    cout << "         REVIEW 3: MULTI-BLOCK DAG + GLOBAL LVA / DCE METRICS          \n";
-    cout << "=======================================================================\n";
-    cout << " - Total Basic Blocks in CFG           : " << initialCfg.getBlockCount() << "\n";
-    cout << " - Total Directed Control Edges        : " << initialCfg.getEdges().size() << "\n";
-    cout << " - Initial Instruction Count           : " << initialInsts.size() << "\n";
-    cout << " - Dead Temporary Assignments Cut (DCE): " << deadEliminated << "\n";
-    cout << " - Final Optimized Instruction Count   : " << finalInsts.size() << "\n";
-    if (!initialInsts.empty()) {
-        double redPct = ((double)(initialInsts.size() - finalInsts.size()) / initialInsts.size()) * 100.0;
-        cout << " - Net Program Size Reduction Rate     : " << fixed << setprecision(1) << redPct << "%\n";
-    }
-    cout << "=======================================================================\n\n";
-
-    cout << "=======================================================================\n";
     cout << "             CFG BEFORE vs AFTER FULL OPTIMIZATION PIPELINE            \n";
     cout << "=======================================================================\n";
     cout << left << setw(35) << "Original Program TAC" 
@@ -366,6 +352,20 @@ void Visualizer::printMultiBlockComparison(const CFG& initialCfg, const CFG& opt
         string orig = (i < initialInsts.size()) ? initialInsts[i].toString() : "";
         string opt = (i < finalInsts.size()) ? finalInsts[i].toString() : "";
         cout << left << setw(35) << orig << " | " << opt << "\n";
+    }
+    cout << "=======================================================================\n\n";
+
+    cout << "=======================================================================\n";
+    cout << "                         OPTIMIZATION METRICS SUMMARY                  \n";
+    cout << "=======================================================================\n";
+    cout << " - Total Basic Blocks in CFG           : " << initialCfg.getBlockCount() << "\n";
+    cout << " - Total Directed Control Edges        : " << initialCfg.getEdges().size() << "\n";
+    cout << " - Initial Instruction Count           : " << initialInsts.size() << "\n";
+    cout << " - Dead Temporary Assignments Cut (DCE): " << deadEliminated << "\n";
+    cout << " - Final Optimized Instruction Count   : " << finalInsts.size() << "\n";
+    if (!initialInsts.empty()) {
+        double redPct = ((double)(initialInsts.size() - finalInsts.size()) / initialInsts.size()) * 100.0;
+        cout << " - Net Program Size Reduction Rate     : " << fixed << setprecision(1) << redPct << "%\n";
     }
     cout << "=======================================================================\n\n";
 }
