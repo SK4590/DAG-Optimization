@@ -63,6 +63,8 @@ void BenchmarkRunner::runCFGBenchmark(const string& testName, const string& file
     CFG initialCfg;
     initialCfg.construct(instructions);
 
+    Visualizer::printCFG(initialCfg);
+
     CFG optimizedCfg = initialCfg;
     optimizedCfg.optimizeLocalDAGs();
     int deadEliminated = optimizedCfg.runDeadCodeElimination();

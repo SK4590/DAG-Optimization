@@ -266,41 +266,50 @@ void Visualizer::exportCFG(const CFG& cfg, const string& filename) {
 void Visualizer::printCFG(const CFG& cfg) {
     const auto& blocks = cfg.getBlocks();
     cout << "\n=======================================================================\n";
-    cout << "                    CONTROL FLOW GRAPH (CFG) TOPOLOGY                 \n";
+    cout << "           BASIC BLOCKS PARTITIONING (LEADER IDENTIFICATION)           \n";
     cout << "=======================================================================\n";
     for (const auto& b : blocks) {
         string labelsStr = "";
-        for (const auto& l : b.getLabels()) labelsStr += l + ": ";
+        for (const auto& l : b.getLabels()) {
+            if (!labelsStr.empty()) labelsStr += ", ";
+            labelsStr += l + ":";
+        }
 
-        cout << "--- Basic Block: " << b.name << " " << (labelsStr.empty() ? "" : "(" + labelsStr + ")") << "\n";
+        cout << "--- Basic Block: " << b.name;
+        if (!labelsStr.empty()) cout << " (Label: " << labelsStr << ")";
+        else if (b.predecessors.empty()) cout << " (Entry Block)";
+        else if (b.successors.empty()) cout << " (Exit Block)";
+        cout << "\n";
         
-        cout << "  Predecessors: ";
+        cout << "    Predecessors: ";
         if (b.predecessors.empty()) cout << "[None (Entry)]";
         else {
+            cout << "[";
             for (size_t i = 0; i < b.predecessors.size(); ++i) {
                 if (i > 0) cout << ", ";
                 cout << "B" << b.predecessors[i];
             }
+            cout << "]";
         }
-        cout << "\n";
-
-        cout << "  Successors  : ";
+        cout << " | Successors: ";
         if (b.successors.empty()) cout << "[None (Exit)]";
         else {
+            cout << "[";
             for (size_t i = 0; i < b.successors.size(); ++i) {
                 if (i > 0) cout << ", ";
                 cout << "B" << b.successors[i];
             }
+            cout << "]";
         }
         cout << "\n";
 
-        cout << "  Instructions (" << b.instructions.size() << "):\n";
+        cout << "    Instructions (" << b.instructions.size() << "):\n";
         for (size_t i = 0; i < b.instructions.size(); ++i) {
-            cout << "    " << (i + 1) << ". " << b.instructions[i].toString() << "\n";
+            cout << "      " << (i + 1) << ". " << b.instructions[i].toString() << "\n";
         }
         cout << "\n";
     }
-    cout << "=======================================================================\n\n";
+    cout << "=======================================================================\n";
 }
 
 static string formatSet(const unordered_set<string>& s) {

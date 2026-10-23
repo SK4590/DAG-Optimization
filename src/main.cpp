@@ -97,9 +97,10 @@ int main(int argc, char* argv[]) {
             cout << "[INFO] Multi-Block Control Flow Graph detected (" 
                  << initialCfg.getBlockCount() << " basic blocks).\n";
             
+            // Show basic blocks division
+            Visualizer::printCFG(initialCfg);
+
             if (verbose) {
-                cout << "\n>>> Phase 1: CFG Topology & Leader Identification\n";
-                Visualizer::printCFG(initialCfg);
                 cout << "\n>>> Phase 2: Live Variable Analysis on Initial CFG\n";
                 Visualizer::printLVAReport(initialCfg);
             }
@@ -109,8 +110,7 @@ int main(int argc, char* argv[]) {
             int deadEliminated = optimizedCfg.runDeadCodeElimination();
 
             if (verbose) {
-                cout << "\n>>> Post-Optimization CFG & LVA:\n";
-                Visualizer::printCFG(optimizedCfg);
+                cout << "\n>>> Post-Optimization LVA:\n";
                 Visualizer::printLVAReport(optimizedCfg);
             }
 
@@ -197,6 +197,8 @@ int main(int argc, char* argv[]) {
                 CFG initialCfg;
                 initialCfg.construct(insts);
                 if (hasCF || initialCfg.getBlockCount() > 1) {
+                    Visualizer::printCFG(initialCfg);
+
                     CFG optCfg = initialCfg;
                     optCfg.optimizeLocalDAGs();
                     int deadElim = optCfg.runDeadCodeElimination();
@@ -250,6 +252,8 @@ int main(int argc, char* argv[]) {
                 if (hasCF) {
                     CFG cfg;
                     cfg.construct(userInstructions);
+
+                    Visualizer::printCFG(cfg);
 
                     CFG optCfg = cfg;
                     optCfg.optimizeLocalDAGs();
