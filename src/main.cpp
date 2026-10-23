@@ -36,9 +36,9 @@ using namespace std;
 
 void displayMenu() {
     cout << "\n=======================================================================\n";
-    cout << "     DAG-BASED OPTIMIZATION & CFG ENGINE (REVIEW 3 - 100% COMPLETE)    \n";
+    cout << "     DAG-BASED OPTIMIZATION & CFG ENGINE    \n";
     cout << "=======================================================================\n";
-    cout << " 1. Run Complete Benchmark Suite (Review 1, 2 & 3: Tests 1-8)\n";
+    cout << " 1. Run Complete Benchmark Suite (Tests 1-8)\n";
     cout << " 2. Run Review 2 Suite (Local DAG Optimizations 1-5)\n";
     cout << " 3. Run Review 3 CFG Suite (Multi-Block CFG, LVA & DCE Tests 6-8)\n";
     cout << " 4. Run Benchmark 6: While Loop Sum (sample6_cfg_loop.tac)\n";
